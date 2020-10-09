@@ -25,7 +25,7 @@
     switch($action) {
 
         case "mostrarListaLibros":
-            if ($result = $db->query("SELECT * FROM libros");
+            if ($result = $db->query("SELECT * FROM libros")) {
 	    /* Tendrás que añadir los siguientes INNER JOIN a esta consulta cuando empieces
                a trabajar con la tabla "personas":
 					INNER JOIN escriben ON libros.idLibro = escriben.idLibro

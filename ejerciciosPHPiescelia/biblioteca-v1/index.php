@@ -26,8 +26,6 @@
 
     switch($action) {
 
-		case "formularioLogin":
-
 		// --------------------------------- MOSTRAR LISTA DE LIBROS ----------------------------------------
 			
         case "mostrarListaLibros":
@@ -72,7 +70,7 @@
 				// La consulta ha fallado
 				echo "Error al tratar de recuperar los datos de la base de datos. Por favor, inténtelo más tarde";
 			}
-            echo "<p><a href='index.php?action=formularioInsertarLibros'>Nuevo</a></p>";
+			echo "<p><a href='index.php?action=formularioInsertarLibros'>Nuevo</a></p>";
    	        break;
 
 		// --------------------------------- FORMULARIO ALTA DE LIBROS ----------------------------------------
@@ -88,19 +86,19 @@
                     Año:<input type='text' name='ano'><br>
                     Número de páginas:<input type='text' name='numPaginas'><br>";
 		    
-					// Añadimos un selector para el id del autor o autores
-					$result = $db->query("SELECT * FROM personas");
-					echo "Autores: <select name='autor[]' multiple size='3'>";
-					while ($fila = $result->fetch_object()) {
-						echo "<option value='".$fila->idPersona."'>".$fila->nombre." ".$fila->apellido."</option>";
-		    }
-		    echo "</select>";
+			// Añadimos un selector para el id del autor o autores
+			$result = $db->query("SELECT * FROM personas");
+			echo "Autores: <select name='autor[]' multiple='true'>";
+			while ($fila = $result->fetch_object()) {
+					echo "<option value='".$fila->idPersona."'>".$fila->nombre." ".$fila->apellido."</option>";
+			}
+			echo "</select>";
 			echo "<a href='index.php?action=formularioInsertarAutores'>Añadir nuevo</a><br>";
 			
 			// Finalizamos el formulario
-	    	echo "  <input type='hidden' name='action' value='insertarLibro'>
-                    <input type='submit'>
-                  </form>";
+			echo "  <input type='hidden' name='action' value='insertarLibro'>
+					<input type='submit'>
+				</form>";
 			echo "<p><a href='index.php'>Volver</a></p>"; 
 
             break;
@@ -119,7 +117,8 @@
 			$numPaginas = $_REQUEST["numPaginas"];
 	    	$autores = $_REQUEST["autor"];
 			
-            // Lanzamos el INSERT contra la BD.
+			// Lanzamos el INSERT contra la BD.
+			echo "INSERT INTO libros (titulo,genero,pais,ano,numPaginas) VALUES ('$titulo','$genero', '$pais', '$ano', '$numPaginas')";
             $db->query("INSERT INTO libros (titulo,genero,pais,ano,numPaginas) VALUES ('$titulo','$genero', '$pais', '$ano', '$numPaginas')");
 	    	if ($db->affected_rows == 1) {
 				// Si la inserción del libro ha funcionado, continuamos insertando en la tabla "escriben"
@@ -184,10 +183,7 @@
 			// Para que salgan preseleccionados los autores del libro que estamos modificando, vamos a buscar
 			// también a esos autores.
 		    $todosLosAutores = $db->query("SELECT * FROM personas");  // Obtener todos los autores
-			$autoresLibro = $db->query("SELECT personas.idPersona FROM libros
-					INNER JOIN escriben ON libros.idLibro = escriben.idLibro
-					INNER JOIN personas ON escriben.idPersona = personas.idPersona
-					WHERE libros.idLibro = '$idLibro'"); 			// Obtener solo los autores del libro que estamos buscando
+			$autoresLibro = $db->query("SELECT idPersona FROM escriben WHERE idLibro = '$idLibro'"); 			// Obtener solo los autores del libro que estamos buscando
 			// Vamos a convertir esa lista de autores del libro en un array de ids de personas
 			$listaAutoresLibro = array();
 			while ($autor = $autoresLibro->fetch_object()) {

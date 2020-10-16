@@ -16,7 +16,7 @@
   <body>
     <?php
 
-    $db = new mysqli("localhost:3306","root","bitnami", "biblioteca");
+    $db = new mysqli("localhost:3386","root","bitnami", "biblioteca");
 
     if (isset($_REQUEST["action"])) {
     	$action = $_REQUEST["action"];

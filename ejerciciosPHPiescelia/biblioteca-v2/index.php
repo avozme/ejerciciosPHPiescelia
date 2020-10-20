@@ -32,34 +32,61 @@
 			// --------------------------------- FORMULARIO DE LOGIN ----------------------------------------
 
 		case "mostrarFormularioLogin":
-			echo "<h1>Login</h1><form action='index.php'>
+			echo "<h1>Iniciar sesión</h1>
+					<form action='index.php'>
 					Usuario:<input type='text' name='usr'><br>
 					Contraseña:<input type='password' name='pass'><br>
 					<input type='hidden' name='action' value='procesarLogin'>
-					<input type='submit'>";
+					<input type='submit'>
+					</form>";
 			break;
 
-			// --------------------------------- PROCESAR LOGIN ----------------------------------------
+			// --------------------------------- PROCESAR LOGIN Y ABRIR SESIÓN ----------------------------------------
 
 		case "procesarLogin":
 			$usr = $_REQUEST["usr"];
 			$pass = $_REQUEST["pass"];
 
-			$result = $db->query("SELECT idUsuario FROM usuarios WHERE usuario = '$usr' AND password = '$pass'");
+			$result = $db->query("SELECT idUsuario, nombre, fotografia FROM usuarios WHERE nombre = '$usr' AND password = '$pass'");
 			if ($result->num_rows == 1) {
+				$usuario = $result->fetch_object();
 				// Iniciamos la sesión
-				$_SESSION["idUsuario"] = $result->fetch_object()->idUsuario;
-			} else {
-				echo "Nombre de usuario o contraseña incorrectos";
+				$_SESSION["idUsuario"] = $usuario->idUsuario;
+				$_SESSION["nombreUsuario"] = $usuario->nombre;
+				$_SESSION["fotografiaUsuario"] = $usuario->fotografia;
+				echo "<p>Sesión iniciada con éxito</p>";
+				echo "<p><a href='index.php'>Continuar</a><p>";
+			} 
+			else {
+				// Error al iniciar la sesión
+				echo "<p>Nombre de usuario o contraseña incorrectos</p>";
+				echo "<p><a href='index.php'>Volver</a><p>";
 			}
 			break;
 
+			// --------------------------------- PROCESAR LOGIN Y ABRIR SESIÓN ----------------------------------------
+
+		case "cerrarSesion":
+			session_destroy();
+			echo "<p>Sesión cerrada con éxito</p>";
+			echo "<p><a href='index.php'>Continuar</a><p>";
+			break;
+			
 			// --------------------------------- MOSTRAR LISTA DE LIBROS ----------------------------------------
 
 		case "mostrarListaLibros":
 			echo "<h1>Biblioteca</h1>";
-
-			echo "<p><a href='index.php?action=mostrarFormularioLogin'>Login</a></p>";
+			if (isset($_SESSION['idUsuario'])) {
+				echo "<p>Hola, ".$_SESSION['nombreUsuario']."</p>";
+				echo "<p align='right'><img width='50' src='".$_SESSION['fotografiaUsuario']."'></p>";
+			}
+			// Enlace a "Iniciar sesión" o "Cerrar sesión"
+			if (isset($_SESSION["idUsuario"])) {
+				echo "<p><a href='index.php?action=cerrarSesion'>Cerrar sesión</a></p>";
+			}
+			else {
+				echo "<p><a href='index.php?action=mostrarFormularioLogin'>Iniciar sesión</a></p>";
+			}
 			// Buscamos todos los libros de la biblioteca
 			if ($result = $db->query("SELECT * FROM libros
 					INNER JOIN escriben ON libros.idLibro = escriben.idLibro
@@ -86,19 +113,25 @@
 						echo "<td>" . $fila->numPaginas . "</td>";
 						echo "<td>" . $fila->nombre . "</td>";
 						echo "<td>" . $fila->apellido . "</td>";
-						echo "<td><a href='index.php?action=formularioModificarLibro&idLibro=" . $fila->idLibro . "'>Modificar</a></td>";
-						echo "<td><a href='index.php?action=borrarLibro&idLibro=" . $fila->idLibro . "'>Borrar</a></td>";
+						// Los botones "Modificar" y "Borrar" solo se muestran si hay una sesión iniciada
+						if (isset($_SESSION["idUsuario"])) {
+							echo "<td><a href='index.php?action=formularioModificarLibro&idLibro=" . $fila->idLibro . "'>Modificar</a></td>";
+							echo "<td><a href='index.php?action=borrarLibro&idLibro=" . $fila->idLibro . "'>Borrar</a></td>";
+						}
 						echo "</tr>";
 					}
 					echo "</table>";
-				} else {
+				} 
+				else {
 					// La consulta no contiene registros
 					echo "No se encontraron datos";
 				}
-			} else {
+			} 
+				else {
 				// La consulta ha fallado
 				echo "Error al tratar de recuperar los datos de la base de datos. Por favor, inténtelo más tarde";
 			}
+			// El botón "Nuevo libro" solo se muestra si hay una sesión iniciada
 			if (isset($_SESSION["idUsuario"])) {
 				echo "<p><a href='index.php?action=formularioInsertarLibros'>Nuevo</a></p>";
 			}
@@ -107,6 +140,7 @@
 			// --------------------------------- FORMULARIO ALTA DE LIBROS ----------------------------------------
 
 		case "formularioInsertarLibros":
+			// Comprobamos si hay una sesión iniciada o no
 			if (isset($_SESSION["idUsuario"])) {
 				echo "<h1>Modificación de libros</h1>";
 
@@ -133,7 +167,8 @@
 					</form>";
 				echo "<p><a href='index.php'>Volver</a></p>";
 			} else {
-				echo "No tienes permisos para eso!!!";
+				echo "<p>No tienes permisos para eso!!!</p>";
+				echo "<p><a href='index.php'>Volver</a></p>";
 			}
 
 			break;
@@ -141,149 +176,170 @@
 			// --------------------------------- INSERTAR LIBROS ----------------------------------------
 
 		case "insertarLibro":
-			echo "<h1>Alta de libros</h1>";
+			
+			if (isset($_SESSION["idUsuario"])) {
+				echo "<h1>Alta de libros</h1>";
 
-			// Vamos a procesar el formulario de alta de libros
-			// Primero, recuperamos todos los datos del formulario
-			$titulo = $_REQUEST["titulo"];
-			$genero = $_REQUEST["genero"];
-			$pais = $_REQUEST["pais"];
-			$ano = $_REQUEST["ano"];
-			$numPaginas = $_REQUEST["numPaginas"];
-			$autores = $_REQUEST["autor"];
+				// Vamos a procesar el formulario de alta de libros
+				// Primero, recuperamos todos los datos del formulario
+				$titulo = $_REQUEST["titulo"];
+				$genero = $_REQUEST["genero"];
+				$pais = $_REQUEST["pais"];
+				$ano = $_REQUEST["ano"];
+				$numPaginas = $_REQUEST["numPaginas"];
+				$autores = $_REQUEST["autor"];
 
-			// Lanzamos el INSERT contra la BD.
-			$db->query("INSERT INTO libros (titulo,genero,pais,ano,numPaginas) VALUES ('$titulo','$genero', '$pais', '$ano', '$numPaginas')");
-			if ($db->affected_rows == 1) {
-				// Si la inserción del libro ha funcionado, continuamos insertando en la tabla "escriben"
-				// Tenemos que averiguar qué idLibro se ha asignado al libro que acabamos de insertar
-				$result = $db->query("SELECT MAX(idLibro) AS ultimoIdLibro FROM libros");
-				$idLibro = $result->fetch_object()->ultimoIdLibro;
-				// Ya podemos insertar todos los autores junto con el libro en "escriben"
-				foreach ($autores as $idAutor) {
-					$db->query("INSERT INTO escriben(idLibro, idPersona) VALUES('$idLibro', '$idAutor')");
+				// Lanzamos el INSERT contra la BD.
+				$db->query("INSERT INTO libros (titulo,genero,pais,ano,numPaginas) VALUES ('$titulo','$genero', '$pais', '$ano', '$numPaginas')");
+				if ($db->affected_rows == 1) {
+					// Si la inserción del libro ha funcionado, continuamos insertando en la tabla "escriben"
+					// Tenemos que averiguar qué idLibro se ha asignado al libro que acabamos de insertar
+					$result = $db->query("SELECT MAX(idLibro) AS ultimoIdLibro FROM libros");
+					$idLibro = $result->fetch_object()->ultimoIdLibro;
+					// Ya podemos insertar todos los autores junto con el libro en "escriben"
+					foreach ($autores as $idAutor) {
+						$db->query("INSERT INTO escriben(idLibro, idPersona) VALUES('$idLibro', '$idAutor')");
+					}
+					echo "Libro insertado con éxito";
+				} else {
+					// Si la inserción del libro ha fallado, mostramos mensaje de error
+					echo "Ha ocurrido un error al insertar el libro. Por favor, inténtelo más tarde.";
 				}
-				echo "Libro insertado con éxito";
+				echo "<p><a href='index.php'>Volver</a></p>";
 			} else {
-				// Si la inserción del libro ha fallado, mostramos mensaje de error
-				echo "Ha ocurrido un error al insertar el libro. Por favor, inténtelo más tarde.";
+				echo "<p>No tienes permisos para eso!!!</p>";
+				echo "<p><a href='index.php'>Volver</a></p>";
 			}
-			echo "<p><a href='index.php'>Volver</a></p>";
-
+				
 			break;
 
 			// --------------------------------- BORRAR LIBROS ----------------------------------------
 
 		case "borrarLibro":
-			echo "<h1>Borrar libros</h1>";
+			if (isset($_SESSION["idUsuario"])) {
+				echo "<h1>Borrar libros</h1>";
 
-			// Recuperamos el id del libro y lanzamos el DELETE contra la BD
-			$idLibro = $_REQUEST["idLibro"];
-			$db->query("DELETE FROM libros WHERE idLibro = '$idLibro'");
+				// Recuperamos el id del libro y lanzamos el DELETE contra la BD
+				$idLibro = $_REQUEST["idLibro"];
+				$db->query("DELETE FROM libros WHERE idLibro = '$idLibro'");
 
-			// Mostramos mensaje con el resultado de la operación
-			if ($db->affected_rows == 0) {
-				echo "Ha ocurrido un error al borrar el libro. Por favor, inténtelo de nuevo";
+				// Mostramos mensaje con el resultado de la operación
+				if ($db->affected_rows == 0) {
+					echo "Ha ocurrido un error al borrar el libro. Por favor, inténtelo de nuevo";
+				} else {
+					echo "Libro borrado con éxito";
+				}
+				echo "<p><a href='index.php'>Volver</a></p>";
 			} else {
-				echo "Libro borrado con éxito";
+				echo "<p>No tienes permisos para eso!!!</p>";
+				echo "<p><a href='index.php'>Volver</a></p>";
 			}
-			echo "<p><a href='index.php'>Volver</a></p>";
 
 			break;
 
 			// --------------------------------- FORMULARIO MODIFICAR LIBROS ----------------------------------------
 
 		case "formularioModificarLibro":
-			echo "<h1>Modificación de libros</h1>";
+			if (isset($_SESSION["idUsuario"])) {
+				echo "<h1>Modificación de libros</h1>";
 
-			// Recuperamos el id del libro que vamos a modificar y sacamos el resto de sus datos de la BD
-			$idLibro = $_REQUEST["idLibro"];
-			$result = $db->query("SELECT * FROM libros WHERE libros.idLibro = '$idLibro'");
-			$libro = $result->fetch_object();
+				// Recuperamos el id del libro que vamos a modificar y sacamos el resto de sus datos de la BD
+				$idLibro = $_REQUEST["idLibro"];
+				$result = $db->query("SELECT * FROM libros WHERE libros.idLibro = '$idLibro'");
+				$libro = $result->fetch_object();
 
-			// Creamos el formulario con los campos del libro
-			// y lo rellenamos con los datos que hemos recuperado de la BD
-			echo "<form action = 'index.php' method = 'get'>
-				    <input type='hidden' name='idLibro' value='$idLibro'>
-                    Título:<input type='text' name='titulo' value='$libro->titulo'><br>
-                    Género:<input type='text' name='genero' value='$libro->genero'><br>
-                    País:<input type='text' name='pais' value='$libro->pais'><br>
-                    Año:<input type='text' name='ano' value='$libro->ano'><br>
-                    Número de páginas:<input type='text' name='numPaginas' value='$libro->numPaginas'><br>";
+				// Creamos el formulario con los campos del libro
+				// y lo rellenamos con los datos que hemos recuperado de la BD
+				echo "<form action = 'index.php' method = 'get'>
+						<input type='hidden' name='idLibro' value='$idLibro'>
+						Título:<input type='text' name='titulo' value='$libro->titulo'><br>
+						Género:<input type='text' name='genero' value='$libro->genero'><br>
+						País:<input type='text' name='pais' value='$libro->pais'><br>
+						Año:<input type='text' name='ano' value='$libro->ano'><br>
+						Número de páginas:<input type='text' name='numPaginas' value='$libro->numPaginas'><br>";
 
-			// Vamos a añadir un selector para el id del autor o autores.
-			// Para que salgan preseleccionados los autores del libro que estamos modificando, vamos a buscar
-			// también a esos autores.
-			$todosLosAutores = $db->query("SELECT * FROM personas");  // Obtener todos los autores
-			$autoresLibro = $db->query("SELECT personas.idPersona FROM libros
-					INNER JOIN escriben ON libros.idLibro = escriben.idLibro
-					INNER JOIN personas ON escriben.idPersona = personas.idPersona
-					WHERE libros.idLibro = '$idLibro'"); 			// Obtener solo los autores del libro que estamos buscando
-			// Vamos a convertir esa lista de autores del libro en un array de ids de personas
-			$listaAutoresLibro = array();
-			while ($autor = $autoresLibro->fetch_object()) {
-				$listaAutoresLibro[] = $autor->idPersona;
+				// Vamos a añadir un selector para el id del autor o autores.
+				// Para que salgan preseleccionados los autores del libro que estamos modificando, vamos a buscar
+				// también a esos autores.
+				$todosLosAutores = $db->query("SELECT * FROM personas");  // Obtener todos los autores
+				$autoresLibro = $db->query("SELECT personas.idPersona FROM libros
+						INNER JOIN escriben ON libros.idLibro = escriben.idLibro
+						INNER JOIN personas ON escriben.idPersona = personas.idPersona
+						WHERE libros.idLibro = '$idLibro'"); 			// Obtener solo los autores del libro que estamos buscando
+				// Vamos a convertir esa lista de autores del libro en un array de ids de personas
+				$listaAutoresLibro = array();
+				while ($autor = $autoresLibro->fetch_object()) {
+					$listaAutoresLibro[] = $autor->idPersona;
+				}
+
+				// Ya tenemos todos los datos para añadir el selector de autores al formulario
+				echo "Autores: <select name='autor[]' multiple size='3'>";
+				while ($fila = $todosLosAutores->fetch_object()) {
+					if (in_array($fila->idPersona, $listaAutoresLibro))
+						echo "<option value='$fila->idPersona' selected>$fila->nombre $fila->apellido</option>";
+					else
+						echo "<option value='$fila->idPersona'>$fila->nombre $fila->apellido</option>";
+				}
+				echo "</select>";
+
+				// Por último, un enlace para crear un nuevo autor
+				echo "<a href='index.php?action=formularioInsertarAutores'>Añadir nuevo</a><br>";
+
+				// Finalizamos el formulario
+				echo "  <input type='hidden' name='action' value='modificarLibro'>
+						<input type='submit'>
+					  </form>";
+				echo "<p><a href='index.php'>Volver</a></p>";
+			} else {
+				echo "<p>No tienes permisos para eso!!!</p>";
+				echo "<p><a href='index.php'>Volver</a></p>";
 			}
-
-			// Ya tenemos todos los datos para añadir el selector de autores al formulario
-			echo "Autores: <select name='autor[]' multiple size='3'>";
-			while ($fila = $todosLosAutores->fetch_object()) {
-				if (in_array($fila->idPersona, $listaAutoresLibro))
-					echo "<option value='$fila->idPersona' selected>$fila->nombre $fila->apellido</option>";
-				else
-					echo "<option value='$fila->idPersona'>$fila->nombre $fila->apellido</option>";
-			}
-			echo "</select>";
-
-			// Por último, un enlace para crear un nuevo autor
-			echo "<a href='index.php?action=formularioInsertarAutores'>Añadir nuevo</a><br>";
-
-			// Finalizamos el formulario
-			echo "  <input type='hidden' name='action' value='modificarLibro'>
-                    <input type='submit'>
-                  </form>";
-			echo "<p><a href='index.php'>Volver</a></p>";
 
 			break;
 
 			// --------------------------------- MODIFICAR LIBROS ----------------------------------------
 
 		case "modificarLibro":
-			echo "<h1>Modificación de libros</h1>";
+			if (isset($_SESSION["idUsuario"])) {
+				echo "<h1>Modificación de libros</h1>";
 
-			// Vamos a procesar el formulario de modificación de libros
-			// Primero, recuperamos todos los datos del formulario
-			$idLibro = $_REQUEST["idLibro"];
-			$titulo = $_REQUEST["titulo"];
-			$genero = $_REQUEST["genero"];
-			$pais = $_REQUEST["pais"];
-			$ano = $_REQUEST["ano"];
-			$numPaginas = $_REQUEST["numPaginas"];
-			$autores = $_REQUEST["autor"];
+				// Vamos a procesar el formulario de modificación de libros
+				// Primero, recuperamos todos los datos del formulario
+				$idLibro = $_REQUEST["idLibro"];
+				$titulo = $_REQUEST["titulo"];
+				$genero = $_REQUEST["genero"];
+				$pais = $_REQUEST["pais"];
+				$ano = $_REQUEST["ano"];
+				$numPaginas = $_REQUEST["numPaginas"];
+				$autores = $_REQUEST["autor"];
 
-			// Lanzamos el UPDATE contra la base de datos.
-			$db->query("UPDATE libros SET
-							titulo = '$titulo',
-							genero = '$genero',
-							pais = '$pais',
-							ano = '$ano',
-							numPaginas = '$numPaginas'
-							WHERE idLibro = '$idLibro'");
+				// Lanzamos el UPDATE contra la base de datos.
+				$db->query("UPDATE libros SET
+								titulo = '$titulo',
+								genero = '$genero',
+								pais = '$pais',
+								ano = '$ano',
+								numPaginas = '$numPaginas'
+								WHERE idLibro = '$idLibro'");
 
-			if ($db->affected_rows == 1) {
-				// Si la modificación del libro ha funcionado, continuamos actualizando la tabla "escriben".
-				// Primero borraremos todos los registros del libro actual y luego los insertaremos de nuevo
-				$db->query("DELETE FROM escriben WHERE idLibro = '$idLibro'");
-				// Ya podemos insertar todos los autores junto con el libro en "escriben"
-				foreach ($autores as $idAutor) {
-					$db->query("INSERT INTO escriben(idLibro, idPersona) VALUES('$idLibro', '$idAutor')");
+				if ($db->affected_rows == 1) {
+					// Si la modificación del libro ha funcionado, continuamos actualizando la tabla "escriben".
+					// Primero borraremos todos los registros del libro actual y luego los insertaremos de nuevo
+					$db->query("DELETE FROM escriben WHERE idLibro = '$idLibro'");
+					// Ya podemos insertar todos los autores junto con el libro en "escriben"
+					foreach ($autores as $idAutor) {
+						$db->query("INSERT INTO escriben(idLibro, idPersona) VALUES('$idLibro', '$idAutor')");
+					}
+					echo "Libro actualizado con éxito";
+				} else {
+					// Si la modificación del libro ha fallado, mostramos mensaje de error
+					echo "Ha ocurrido un error al modificar el libro. Por favor, inténtelo más tarde.";
 				}
-				echo "Libro actualizado con éxito";
+				echo "<p><a href='index.php'>Volver</a></p>";
 			} else {
-				// Si la modificación del libro ha fallado, mostramos mensaje de error
-				echo "Ha ocurrido un error al modificar el libro. Por favor, inténtelo más tarde.";
+				echo "<p>No tienes permisos para eso!!!</p>";
+				echo "<p><a href='index.php'>Volver</a></p>";
 			}
-			echo "<p><a href='index.php'>Volver</a></p>";
 			break;
 
 			// --------------------------------- BUSCAR LIBROS ----------------------------------------

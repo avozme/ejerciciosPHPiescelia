@@ -8,15 +8,18 @@
 -->
 
 <?php
+	session_start();
 
-	// Creamos los objetos vista y modelos
+	// Instanciamos el objeto controlador
 	include_once("controlador.php");
 	$controlador = new Controlador();
 	
+	// Recuperamos la acción de la URL. Si no hay, asignamos una por defecto
 	if (isset($_REQUEST["action"])) {
 		$action = $_REQUEST["action"];
 	} else {
 		$action = "mostrarListaLibros";  // Acción por defecto
 	}
 
+	// Ejecutamos el método llamado como la acción del controlador
 	$controlador->$action();

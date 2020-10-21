@@ -7,13 +7,12 @@
 
         // Devuelve una persona a partir de su id, o null en caso de error
         public function get($id) {
-            $arrayResult = array();
             if ($result = $this->db->query("SELECT * FROM persona WHERE idPersona = '$id'")) {
-                $arrayResult[] = $result->fetch_object();
+                $result = $result->fetch_object();
             } else {
-                $arrayResult = null;
+                $result = null;
             }
-            return $arrayResult;
+            return $result;
         }
 
         // Devuelve todas las personas en un array o null en caso de error

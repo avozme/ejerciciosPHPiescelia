@@ -12,6 +12,9 @@ class Controlador
 
 	private $vista, $usuario, $libro, $persona;
 
+	/**
+	 * Constructor. Crea las variables de los modelos y la vista
+	 */
 	public function __construct()
 	{
 		$this->vista = new Vista();
@@ -20,11 +23,17 @@ class Controlador
 		$this->persona = new Persona();
 	}
 
+	/**
+	 * Muestra el formulario de login
+	 */
 	public function mostrarFormularioLogin()
 	{
 		$this->vista->mostrar("usuario/formularioLogin");
 	}
 
+	/**
+	 * Procesa el formulario de login e inicia la sesión
+	 */
 	public function procesarLogin()
 	{
 		$usr = $_REQUEST["usr"];
@@ -42,6 +51,9 @@ class Controlador
 		}
 	}
 
+	/**
+	 * Cierra la sesión
+	 */
 	public function cerrarSesion()
 	{
 		session_destroy();
@@ -49,16 +61,18 @@ class Controlador
 		$this->vista->mostrar("usuario/formularioLogin", $data);
 	}
 
-	// --------------------------------- MOSTRAR LISTA DE LIBROS ----------------------------------------
-
+	/**
+	 * Muestra una lista con todos los libros
+	 */
 	public function mostrarListaLibros()
 	{
 		$data['listaLibros'] = $this->libro->getAll();
 		$this->vista->mostrar("libro/listaLibros", $data);
 	}
 
-	// --------------------------------- FORMULARIO ALTA DE LIBROS ----------------------------------------
-
+	/**
+	 * Muestra el formulario de alta de libros
+	 */
 	public function formularioInsertarLibros()
 	{
 		if (isset($_SESSION["idUsuario"])) {
@@ -71,9 +85,9 @@ class Controlador
 		}
 	}
 
-
-	// --------------------------------- INSERTAR LIBROS ----------------------------------------
-
+	/**
+	 * Inserta un libro en la base de datos
+	 */
 	public function insertarLibro()
 	{
 
@@ -110,8 +124,9 @@ class Controlador
 		}
 	}
 
-	// --------------------------------- BORRAR LIBROS ----------------------------------------
-
+	/**
+	 * Elimina un libro de la base de datos
+	 */
 	public function borrarLibro()
 	{
 		if (isset($_SESSION["idUsuario"])) {
@@ -130,8 +145,9 @@ class Controlador
 		}
 	}
 
-	// --------------------------------- FORMULARIO MODIFICAR LIBROS ----------------------------------------
-
+	/**
+	 * Muestra el formulario de modificación de libro
+	 */
 	public function formularioModificarLibro()
 	{
 		if (isset($_SESSION["idUsuario"])) {
@@ -150,8 +166,9 @@ class Controlador
 		}
 	}
 
-	// --------------------------------- MODIFICAR LIBROS ----------------------------------------
-
+	/**
+	 * Modifica un libro en la base de datos
+	 */
 	public function modificarLibro()
 	{
 		if (isset($_SESSION["idUsuario"])) {
@@ -172,7 +189,7 @@ class Controlador
 			if ($result == 1) {
 				// Si la modificación del libro ha funcionado, continuamos actualizando la tabla "escriben".
 				$resultAutores = $this->libro->updateAutores($idLibro, $autores);
-				if ($resultAutores == 1) $data['msjInfo'] = "Libro actualizado con éxito";
+				if ($resultAutores > 0) $data['msjInfo'] = "Libro actualizado con éxito";
 				else $data['msjError'] = "Error al actualizar los autores del libro";
 			} else {
 				// Si la modificación del libro ha fallado, mostramos mensaje de error
@@ -186,8 +203,9 @@ class Controlador
 		}
 	}
 
-	// --------------------------------- BUSCAR LIBROS ----------------------------------------
-
+	/**
+	 * Lanza una búsqueda de libros y muestra el resultado
+	 */
 	public function buscarLibros()
 	{
 		// Recuperamos el texto de búsqueda de la variable de formulario

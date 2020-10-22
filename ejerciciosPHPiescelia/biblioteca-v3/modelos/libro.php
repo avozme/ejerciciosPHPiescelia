@@ -1,13 +1,25 @@
 <?php
+
+/**
+ * Clase libro. Es el modelo de libro
+ */
 class Libro
 {
     private $db;
+	/**
+	 * Constructor. Crea la conexión con la base de datos
+     * y la guarda en una variable de la clase
+	 */
     public function __construct()
     {
         $this->db = new mysqli("localhost:3386", "root", "bitnami", "biblioteca");
     }
 
-    // Devuelve un libro a partir de su id, o null en caso de error
+	/**
+	 * Busca un libro con idLibro = $id en la base de datos.
+     * @param id El id del libro que se quiere buscar.
+     * @return Un objeto con el libro de la BD, o null si no lo encuentra.
+	 */
     public function get($id)
     {
         if ($result = $this->db->query("SELECT * FROM libros
@@ -19,7 +31,11 @@ class Libro
         return $result;
     }
 
-    // Devuelve un array con los ids de los autores de un libro
+	/**
+	 * Busca todos los autores de un libro.
+     * @param idLibro El id del libro que se quiere buscar.
+     * @return Un array con los ids de los autores de un libro
+	 */
     public function getAutores($idLibro)
     {
         $autoresLibro = $this->db->query("SELECT personas.idPersona FROM libros
@@ -34,7 +50,10 @@ class Libro
         return $listaAutoresLibro;
     }
 
-    // Devuelve todos los libros en un array o null en caso de error
+    /**
+     * Busca todos los libros de la BD
+     * @return Todos los libros como objetos de un array o null en caso de error
+     */
     public function getAll()
     {
         $arrayResult = array();
@@ -51,6 +70,15 @@ class Libro
         return $arrayResult;
     }
 
+    /**
+     * Inserta un libro en la BD
+     * @param titulo El título del libro
+     * @param genero El género del libro
+     * @param pais El país del libro
+     * @param ano El año de publicación del libro
+     * @param numPaginas El número de páginas del libro
+     * @return 1 si la inserción tiene éxito, 0 en otro caso
+     */
     public function insert($titulo, $genero, $pais, $ano, $numPaginas)
     {
         $this->db->query("INSERT INTO libros (titulo,genero,pais,ano,numPaginas) 
@@ -58,6 +86,16 @@ class Libro
         return $this->db->affected_rows;
     }
 
+    /**
+     * Actualiza un libro de la BD
+     * @param idLibro El id del libro que se va a actualizar
+     * @param titulo El título del libro
+     * @param genero El género del libro
+     * @param pais El país del libro
+     * @param ano El año de publicación del libro
+     * @param numPaginas El número de páginas del libro
+     * @return 1 si la actualización tiene éxito, 0 en otro caso
+     */
     public function update($idLibro, $titulo, $genero, $pais, $ano, $numPaginas)
     {
         $this->db->query("UPDATE libros SET
@@ -70,6 +108,12 @@ class Libro
         return $this->db->affected_rows;
     }
 
+    /**
+     * Actualiza los autores de un libro en la BD
+     * @param idLibro El id del libro que se va a actualizar
+     * @param autores La lista (array) de autores de ese libro
+     * @return 0 en otro caso o el número de autores insertados en caso de éxito
+     */
     public function updateAutores($idLibro, $autores)
     {
         $cantidadDeAutores = count($autores);
@@ -89,12 +133,21 @@ class Libro
         else return 0; 
     }
 
+    /** 
+     * Elimina un libro de la BD
+     * @param id El id del libro que se va a actualizar
+     * @return 1 si el borrado tiene éxito, 0 en caso contrario
+     */
     public function delete($id)
     {
         $this->db->query("DELETE FROM libros WHERE idLibro = '$id'");
         return $this->db->affected_rows;
     }
 
+    /** 
+     * Obtiene el último ID asignado a un libro en la BD
+     * @return El último ID asignado
+     */
     public function getLastId()
     {
         $result = $this->db->query("SELECT MAX(idLibro) AS ultimoIdLibro FROM libros");
@@ -102,6 +155,11 @@ class Libro
         return $idLibro;
     }
 
+    /** 
+     * Realiza una búsqueda por titulo o género (del libro) y nombre o apellido (del autor)
+     * @param textoBusqueda El texto de búsqueda
+     * @return Un array de objetos con los datos de los libros encontrados
+     */
     public function busquedaAproximada($textoBusqueda)
     {
         $arrayResult = array();

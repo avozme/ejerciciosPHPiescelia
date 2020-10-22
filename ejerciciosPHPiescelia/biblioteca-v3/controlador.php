@@ -4,9 +4,6 @@ include_once("modelos/usuario.php");
 include_once("modelos/libro.php");
 include_once("modelos/persona.php");
 
-// Creamos los objetos vista y modelos
-
-
 class Controlador
 {
 
@@ -100,9 +97,9 @@ class Controlador
 			$ano = $_REQUEST["ano"];
 			$numPaginas = $_REQUEST["numPaginas"];
 			$autores = $_REQUEST["autor"];
+			// Ahora insertamos el libro en la BD
 			$result = $this->libro->insert($titulo, $genero, $pais, $ano, $numPaginas);
 
-			// Lanzamos el INSERT contra la BD.
 			if ($result == 1) {
 				// Si la inserción del libro ha funcionado, continuamos insertando en la tabla "escriben"
 				// Tenemos que averiguar qué idLibro se ha asignado al libro que acabamos de insertar
@@ -116,6 +113,7 @@ class Controlador
 				// Si la inserción del libro ha fallado, mostramos mensaje de error
 				$data['msjError'] = "Ha ocurrido un error al insertar el libro. Por favor, inténtelo más tarde.";
 			}
+			// Terminamos mostrando la lista de libros actualizada
 			$data['listaLibros'] = $this->libro->getAll();
 			$this->vista->mostrar("libro/listaLibros", $data);
 		} else {
@@ -130,13 +128,16 @@ class Controlador
 	public function borrarLibro()
 	{
 		if (isset($_SESSION["idUsuario"])) {
+			// Recuperamos el id del libro
 			$idLibro = $_REQUEST["idLibro"];
+			// Eliminamos el libro de la BD
 			$result = $this->libro->delete($idLibro);
 			if ($result == 0) {
 				$data['msjError'] = "Ha ocurrido un error al borrar el libro. Por favor, inténtelo de nuevo";
 			} else {
 				$data['msjInfo'] = "Libro borrado con éxito";
 			}
+			// Mostramos la lista de libros actualizada
 			$data['listaLibros'] = $this->libro->getAll();
 			$this->vista->mostrar("libro/listaLibros", $data);
 		} else {
@@ -210,6 +211,7 @@ class Controlador
 	{
 		// Recuperamos el texto de búsqueda de la variable de formulario
 		$textoBusqueda = $_REQUEST["textoBusqueda"];
+		// Lanzamos la búsqueda y enviamos los resultados a la vista de lista de libros
 		$data['listaLibros'] = $this->libro->busquedaAproximada($textoBusqueda);
 		$data['msjInfo'] = "Resultados de la búsqueda: \"$textoBusqueda\"";
 		$this->vista->mostrar("libro/listaLibros", $data);

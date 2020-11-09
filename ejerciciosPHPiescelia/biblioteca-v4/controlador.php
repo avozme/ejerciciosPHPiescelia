@@ -3,6 +3,7 @@ include_once("vista.php");
 include_once("modelos/usuario.php");
 include_once("modelos/libro.php");
 include_once("modelos/persona.php");
+include_once("modelos/seguridad.php");
 
 class Controlador
 {
@@ -18,6 +19,7 @@ class Controlador
 		$this->usuario = new Usuario();
 		$this->libro = new Libro();
 		$this->persona = new Persona();
+		$this->seguridad = new Seguridad();
 	}
 
 	/**
@@ -33,12 +35,13 @@ class Controlador
 	 */
 	public function procesarLogin()
 	{
-		$usr = $this->security->filtrar($_REQUEST["usr"]);
+		$usr = $_REQUEST["usr"];
 		$pass = $_REQUEST["pass"];
 
-		$result = $this->usuario->buscarUsuario($usr, $pass);
+		$usuario = $this->usuario->buscarUsuario($usr, $pass);
 
-		if ($result) {
+		if ($usuario) {
+			$this->seguridad->abrirSesion($usuario);
 			// De momento, dejamos aquí este echo. Ya lo quitaremos
 			echo "<script>location.href = 'index.php'</script>";
 		} else {
@@ -53,7 +56,7 @@ class Controlador
 	 */
 	public function cerrarSesion()
 	{
-		session_destroy();
+		$this->seguridad->cerrarSesion();
 		$data['msjInfo'] = "Sesión cerrada correctamente";
 		$this->vista->mostrar("usuario/formularioLogin", $data);
 	}
@@ -64,7 +67,6 @@ class Controlador
 	public function mostrarListaLibros()
 	{
 		$data['listaLibros'] = $this->libro->getAll();
-		var_dump($data);
 		$this->vista->mostrar("libro/listaLibros", $data);
 	}
 
@@ -73,13 +75,12 @@ class Controlador
 	 */
 	public function formularioInsertarLibros()
 	{
-		if (isset($_SESSION["idUsuario"])) {
+		if ($this->seguridad->haySesionIniciada()) {
 			// Primero, accedemos al modelo de personas para obtener la lista de autores
 			$data['listaAutores'] = $this->persona->getAll();
 			$this->vista->mostrar('libro/formularioInsertarLibro', $data);
 		} else {
-			$data['msjError'] = "No tienes permisos para hacer eso";
-			$this->vista->mostrar("usuario/formularioLogin", $data);
+			$this->seguridad->errorAccesoNoPermitido();
 		}
 	}
 
@@ -89,15 +90,9 @@ class Controlador
 	public function insertarLibro()
 	{
 
-		if (isset($_SESSION["idUsuario"])) {
+		if ($this->seguridad->haySesionIniciada()) {
 			// Vamos a procesar el formulario de alta de libros
 			// Primero, recuperamos todos los datos del formulario
-			$titulo = $_REQUEST["titulo"];
-			$genero = $_REQUEST["genero"];
-			$pais = $_REQUEST["pais"];
-			$ano = $_REQUEST["ano"];
-			$numPaginas = $_REQUEST["numPaginas"];
-			$autores = $_REQUEST["autor"];
 			// Ahora insertamos el libro en la BD
 			$result = $this->libro->insert($titulo, $genero, $pais, $ano, $numPaginas);
 
@@ -118,8 +113,7 @@ class Controlador
 			$data['listaLibros'] = $this->libro->getAll();
 			$this->vista->mostrar("libro/listaLibros", $data);
 		} else {
-			$data['msjError'] = "No tienes permisos para hacer eso";
-			$this->vista->mostrar("usuario/formularioLogin", $data);
+			$this->seguridad->errorAccesoNoPermitido();
 		}
 	}
 
@@ -128,7 +122,7 @@ class Controlador
 	 */
 	public function borrarLibro()
 	{
-		if (isset($_SESSION["idUsuario"])) {
+		if ($this->seguridad->haySesionIniciada()) {
 			// Recuperamos el id del libro
 			$idLibro = $_REQUEST["idLibro"];
 			// Eliminamos el libro de la BD
@@ -142,8 +136,7 @@ class Controlador
 			$data['listaLibros'] = $this->libro->getAll();
 			$this->vista->mostrar("libro/listaLibros", $data);
 		} else {
-			$data['msjError'] = "No tienes permisos para hacer eso";
-			$this->vista->mostrar("usuario/formularioLogin", $data);
+			$this->seguridad->errorAccesoNoPermitido();
 		}
 	}
 
@@ -152,7 +145,7 @@ class Controlador
 	 */
 	public function formularioModificarLibro()
 	{
-		if (isset($_SESSION["idUsuario"])) {
+		if ($this->seguridad->haySesionIniciada()) {
 			// Recuperamos el libro con id = $idLibro y lo preparamos para pasárselo a la vista
 			$idLibro = $_REQUEST["idLibro"];
 			$data['libro'] = $this->libro->get($idLibro);
@@ -163,8 +156,7 @@ class Controlador
 			// Rederizamos la vista con el formulario de modificación de libros
 			$this->vista->mostrar('libro/formularioModificarLibro', $data);
 		} else {
-			$data['msjError'] = "No tienes permisos para hacer eso";
-			$this->vista->mostrar("usuario/formularioLogin", $data);
+			$this->seguridad->errorAccesoNoPermitido();
 		}
 	}
 
@@ -173,7 +165,7 @@ class Controlador
 	 */
 	public function modificarLibro()
 	{
-		if (isset($_SESSION["idUsuario"])) {
+		if ($this->seguridad->haySesionIniciada()) {
 
 			// Vamos a procesar el formulario de modificación de libros
 			// Primero, recuperamos todos los datos del formulario
@@ -200,8 +192,7 @@ class Controlador
 			$data['listaLibros'] = $this->libro->getAll();
 			$this->vista->mostrar("libro/listaLibros", $data);
 		} else {
-			$data['msjError'] = "No tienes permisos para hacer eso";
-			$this->vista->mostrar("usuario/formularioLogin", $data);
+			$this->seguridad->errorAccesoNoPermitido();
 		}
 	}
 

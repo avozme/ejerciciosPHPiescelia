@@ -81,9 +81,9 @@ class Libro
         $numPaginas = $_REQUEST["numPaginas"];
         $autores = $_REQUEST["autor"];
 
-        $this->db->query("INSERT INTO libros (titulo,genero,pais,ano,numPaginas) 
+        $result = $this->db->manipulacion("INSERT INTO libros (titulo,genero,pais,ano,numPaginas) 
                         VALUES ('$titulo','$genero', '$pais', '$ano', '$numPaginas')");
-        return $this->db->affected_rows;
+        return $result;
     }
 
     /**
@@ -164,7 +164,7 @@ class Libro
     {
         $arrayResult = array();
         // Buscamos los libros de la biblioteca que coincidan con el texto de búsqueda
-		if ($result = $this->db->query("SELECT * FROM libros
+		if ($result = $this->db->consulta("SELECT * FROM libros
 					INNER JOIN escriben ON libros.idLibro = escriben.idLibro
 					INNER JOIN personas ON escriben.idPersona = personas.idPersona
 					WHERE libros.titulo LIKE '%$textoBusqueda%'

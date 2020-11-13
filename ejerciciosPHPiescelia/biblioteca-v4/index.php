@@ -1,13 +1,12 @@
-<!-- BIBLIOTECA VERSIÓN 3
-
-     Características de esta versión:
-       - Código con arquitectura MVC
-       - Con seguridad
-       - Con sesiones y control de acceso
-       - Sin reutilización de código
--->
-
 <?php
+	/* BIBLIOTECA VERSIÓN 4
+
+	Características de esta versión:
+	- Código con arquitectura MVC EN 5 CAPAS
+	- Con seguridad
+	- Con sesiones y control de acceso
+	- Sin reutilización de código
+	*/
 	session_start();
 
 	// Instanciamos el objeto controlador

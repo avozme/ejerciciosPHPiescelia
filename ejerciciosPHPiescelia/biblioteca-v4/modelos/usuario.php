@@ -45,5 +45,13 @@
         public function delete() {
         }
 
+        public function existeNombre($nombreUsuario) {
+            $result = $this->db->consulta("SELECT * FROM usuarios WHERE nombre = '$nombreUsuario'");
+            if ($result != null)
+                return 1;
+            else  
+                return 0;
+
+        }
 
     }

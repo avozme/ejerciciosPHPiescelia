@@ -39,11 +39,10 @@ class Controlador
 		$pass = $_REQUEST["pass"];
 
 		$usuario = $this->usuario->buscarUsuario($usr, $pass);
-
-		if ($usuario) {
-			$this->seguridad->abrirSesion($usuario);
-			// De momento, dejamos aquí este echo. Ya lo quitaremos
-			echo "<script>location.href = 'index.php'</script>";
+		
+		if (count($usuario) == 1) {
+			$this->seguridad->abrirSesion($usuario[0]);
+			$this->mostrarListaLibros();
 		} else {
 			// Error al iniciar la sesión
 			$data['msjError'] = "Nombre de usuario o contraseña incorrectos";
@@ -208,5 +207,11 @@ class Controlador
 		$data['msjInfo'] = "Resultados de la búsqueda: \"$textoBusqueda\"";
 		$this->vista->mostrar("libro/listaLibros", $data);
 
+	}
+
+	public function comprobarNombreUsuario() {
+		$nombreUsuario = $_REQUEST["nombreUsuario"];
+		$result = $this->usuario->existeNombre($nombreUsuario);
+		echo $result;
 	}
 }

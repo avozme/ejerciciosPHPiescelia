@@ -20,9 +20,6 @@ class DB {
             while($fila = $result->fetch_object()) {
                 $arrayResult[] = $fila;
             }
-            //if (count($arrayResult) == 1) {
-            //    $arrayResult = $arrayResult[0];
-            //}
         } else {
             $arrayResult = null;
         }

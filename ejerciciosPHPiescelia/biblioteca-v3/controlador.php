@@ -64,7 +64,6 @@ class Controlador
 	public function mostrarListaLibros()
 	{
 		$data['listaLibros'] = $this->libro->getAll();
-		var_dump($data);
 		$this->vista->mostrar("libro/listaLibros", $data);
 	}
 

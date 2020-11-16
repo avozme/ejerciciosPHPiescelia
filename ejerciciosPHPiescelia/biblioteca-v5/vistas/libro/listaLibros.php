@@ -1,4 +1,6 @@
 <script>
+	// **** Petición y respuesta AJAX con JS tradicional ****
+	
 	peticionAjax = new XMLHttpRequest();
 
 	function borrarPorAjax(idLibro) {
@@ -17,11 +19,29 @@
 				}
 				else {
 					document.getElementById('msjInfo').innerHTML = "Libro borrado con éxito";
-					document.getElemebtById('libro' + idLibro).removeChild();
+					document.getElementById('libro' + idLibro).remove();
 				}
 			}
 		} 
 	}
+
+	// **** Petición y respuesta AJAX con jQuery ****
+
+	$(document).ready(function() {
+		$(".btnBorrar").click(function() {
+			$.get("index.php?action=borrarLibroAjax&idLibro=" + this.idLibro, null, function(idLibroBorrado) {
+				if (idLibroBorrado == -1) {
+					$('#msjError').html("Ha ocurrido un error al borrar el libro");
+				}
+				else {
+					$('#msjInfo').html("Libro borrado con éxito");
+					$('#libro' + idLibro).remove();
+				}
+			});
+		});
+	});
+
+
 </script>
 
 
@@ -76,7 +96,8 @@
 			if ($this->seguridad->haySesionIniciada()) {
 				echo "<td><a href='index.php?action=formularioModificarLibro&idLibro=" . $libro->idLibro . "'>Modificar</a></td>";
 				echo "<td><a href='index.php?action=borrarLibro&idLibro=" . $libro->idLibro . "'>Borrar mediante enlace</a></td>";
-				echo "<td><a href='#' onclick='borrarPorAjax(".$libro->idLibro.")'>Borrar por Ajax</a></td>";
+				echo "<td><a href='#' onclick='borrarPorAjax(".$libro->idLibro.")'>Borrar por Ajax/JS</a></td>";
+				echo "<td><a href='#' class='btnBorrar' idLibro='".$libro->idLibro."'>Borrar por Ajax/jQuery</a></td>";
 			}
 			echo "</tr>";
 	}

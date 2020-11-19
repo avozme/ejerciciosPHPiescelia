@@ -1,10 +1,11 @@
 <?php
-	/* BIBLIOTECA VERSIÓN 4
+	/* BIBLIOTECA VERSIÓN 5
 
 	Características de esta versión:
 	- Código con arquitectura MVC EN 5 CAPAS
 	- Con seguridad
 	- Con sesiones y control de acceso
+	- Con borrado de libros por Ajax.
 	- Sin reutilización de código
 	*/
 	session_start();

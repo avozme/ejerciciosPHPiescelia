@@ -40,8 +40,8 @@ class Controlador
 
 		$usuario = $this->usuario->buscarUsuario($usr, $pass);
 		
-		if (count($usuario) == 1) {
-			$this->seguridad->abrirSesion($usuario[0]);
+		if ($usuario) {
+			$this->seguridad->abrirSesion($usuario);
 			$this->mostrarListaLibros();
 		} else {
 			// Error al iniciar la sesión
@@ -93,14 +93,14 @@ class Controlador
 			// Vamos a procesar el formulario de alta de libros
 			// Primero, recuperamos todos los datos del formulario
 			// Ahora insertamos el libro en la BD
-			$result = $this->libro->insert($titulo, $genero, $pais, $ano, $numPaginas);
+			$result = $this->libro->insert();
 
 			if ($result == 1) {
 				// Si la inserción del libro ha funcionado, continuamos insertando en la tabla "escriben"
 				// Tenemos que averiguar qué idLibro se ha asignado al libro que acabamos de insertar
 				$ultimoId = $this->libro->getLastId();
 				// Ya podemos insertar todos los autores junto con el libro en "escriben"
-				foreach ($autores as $idAutor) {
+				foreach ($_REQUEST["autor"] as $idAutor) {
 					$this->persona->escribe($ultimoId, $idAutor);
 				}
 				$data['msjInfo'] = "Libro insertado con éxito";
@@ -190,20 +190,13 @@ class Controlador
 		if ($this->seguridad->haySesionIniciada()) {
 
 			// Vamos a procesar el formulario de modificación de libros
-			// Primero, recuperamos todos los datos del formulario
-			$idLibro = $_REQUEST["idLibro"];
-			$titulo = $_REQUEST["titulo"];
-			$genero = $_REQUEST["genero"];
-			$pais = $_REQUEST["pais"];
-			$ano = $_REQUEST["ano"];
-			$numPaginas = $_REQUEST["numPaginas"];
-			$autores = $_REQUEST["autor"];
-
 			// Lanzamos el UPDATE contra la base de datos.
-			$result = $this->libro->update($idLibro, $titulo, $genero, $pais, $ano, $numPaginas);
+			$result = $this->libro->update();
 
 			if ($result == 1) {
 				// Si la modificación del libro ha funcionado, continuamos actualizando la tabla "escriben".
+				$idLibro = $_REQUEST["idLibro"];
+				$autores = $_REQUEST["autor"];
 				$resultAutores = $this->libro->updateAutores($idLibro, $autores);
 				if ($resultAutores > 0) $data['msjInfo'] = "Libro actualizado con éxito";
 				else $data['msjError'] = "Error al actualizar los autores del libro";

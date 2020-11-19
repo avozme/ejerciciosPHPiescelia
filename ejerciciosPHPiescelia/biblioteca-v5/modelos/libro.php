@@ -8,20 +8,20 @@ include_once("DB.php");
 class Libro
 {
     private $db;
-	/**
-	 * Constructor. Crea la conexión con la base de datos
+    /**
+     * Constructor. Crea la conexión con la base de datos
      * y la guarda en una variable de la clase
-	 */
+     */
     public function __construct()
     {
         $this->db = new DB();
     }
 
-	/**
-	 * Busca un libro con idLibro = $id en la base de datos.
+    /**
+     * Busca un libro con idLibro = $id en la base de datos.
      * @param id El id del libro que se quiere buscar.
      * @return Un objeto con el libro de la BD, o null si no lo encuentra.
-	 */
+     */
     public function get($id)
     {
         $result = $this->db->consulta("SELECT * FROM libros
@@ -29,11 +29,11 @@ class Libro
         return $result;
     }
 
-	/**
-	 * Busca todos los autores de un libro.
+    /**
+     * Busca todos los autores de un libro.
      * @param idLibro El id del libro que se quiere buscar.
      * @return Un array con los ids de los autores de un libro
-	 */
+     */
     public function getAutores($idLibro)
     {
         $autoresLibro = $this->db->consulta("SELECT personas.idPersona FROM libros
@@ -42,7 +42,7 @@ class Libro
 						WHERE libros.idLibro = '$idLibro'");             // Obtener solo los autores del libro que estamos buscando
         // Vamos a convertir esa lista de autores del libro en un array de ids de personas
         $listaAutoresLibro = array();
-        foreach($autoresLibro as $autor) {
+        foreach ($autoresLibro as $autor) {
             $listaAutoresLibro[] = $autor->idPersona;
         }
         return $listaAutoresLibro;
@@ -59,7 +59,7 @@ class Libro
 					                        INNER JOIN escriben ON libros.idLibro = escriben.idLibro
 					                        INNER JOIN personas ON escriben.idPersona = personas.idPersona
                                             ORDER BY libros.titulo");
-           
+
         return $result;
     }
 
@@ -72,7 +72,7 @@ class Libro
      * @param numPaginas El número de páginas del libro
      * @return 1 si la inserción tiene éxito, 0 en otro caso
      */
-    public function insert($titulo, $genero, $pais, $ano, $numPaginas)
+    public function insert()
     {
         $titulo = $_REQUEST["titulo"];
         $genero = $_REQUEST["genero"];
@@ -96,8 +96,18 @@ class Libro
      * @param numPaginas El número de páginas del libro
      * @return 1 si la actualización tiene éxito, 0 en otro caso
      */
-    public function update($idLibro, $titulo, $genero, $pais, $ano, $numPaginas)
+    public function update()
     {
+        // Primero, recuperamos todos los datos del formulario
+        $idLibro = $_REQUEST["idLibro"];
+        $titulo = $_REQUEST["titulo"];
+        $genero = $_REQUEST["genero"];
+        $pais = $_REQUEST["pais"];
+        $ano = $_REQUEST["ano"];
+        $numPaginas = $_REQUEST["numPaginas"];
+        $autores = $_REQUEST["autor"];
+
+
         $result = $this->db->manipulacion("UPDATE libros SET
 								titulo = '$titulo',
 								genero = '$genero',
@@ -112,25 +122,32 @@ class Libro
      * Actualiza los autores de un libro en la BD
      * @param idLibro El id del libro que se va a actualizar
      * @param autores La lista (array) de autores de ese libro
-     * @return 0 en otro caso o el número de autores insertados en caso de éxito
+     * @return 1 en caso de éxito o 0 en caso de error
      */
     public function updateAutores($idLibro, $autores)
     {
         $cantidadDeAutores = count($autores);
 
-        // Primero borraremos todos los registros del libro actual y luego los insertaremos de nuevo
-        $this->db->manipulacion("DELETE FROM escriben WHERE idLibro = '$idLibro'");
-        
-        // Ya podemos insertar todos los autores junto con el libro en "escriben"
-        $insertados = 0;
-        foreach ($autores as $idAutor) {
-            $result = $this->db->manipulacion("INSERT INTO escriben(idLibro, idPersona) VALUES('$idLibro', '$idAutor')");
-            if ($result == 1) $insertados++;
+        if ($cantidadDeAutores == 0) {
+            // Si en el formulario no se ha seleccionado ningún autor, no hacemos ningún cambio
+            return 1;
         }
+        else {
 
-        // Si el número de autores insertados en "escriben" es igual al número de elementos del array $autores, todo ha ido bien
-        if ($cantidadDeAutores == $insertados) return 1;
-        else return 0; 
+            // Primero borraremos todos los registros del libro actual y luego los insertaremos de nuevo
+            $this->db->manipulacion("DELETE FROM escriben WHERE idLibro = '$idLibro'");
+
+            // Ya podemos insertar todos los autores junto con el libro en "escriben"
+            $insertados = 0;
+            foreach ($autores as $idAutor) {
+                $result = $this->db->manipulacion("INSERT INTO escriben(idLibro, idPersona) VALUES('$idLibro', '$idAutor')");
+                if ($result == 1) $insertados++;
+            }
+
+            // Si el número de autores insertados en "escriben" es igual al número de elementos del array $autores, todo ha ido bien
+            if ($cantidadDeAutores == $insertados) return 1;
+            else return 0;
+        } 
     }
 
     /** 
@@ -164,7 +181,7 @@ class Libro
     {
         $arrayResult = array();
         // Buscamos los libros de la biblioteca que coincidan con el texto de búsqueda
-		if ($result = $this->db->consulta("SELECT * FROM libros
+        if ($result = $this->db->consulta("SELECT * FROM libros
 					INNER JOIN escriben ON libros.idLibro = escriben.idLibro
 					INNER JOIN personas ON escriben.idPersona = personas.idPersona
 					WHERE libros.titulo LIKE '%$textoBusqueda%'
@@ -179,6 +196,5 @@ class Libro
             $arrayResult = null;
         }
         return $arrayResult;
-
     }
 }

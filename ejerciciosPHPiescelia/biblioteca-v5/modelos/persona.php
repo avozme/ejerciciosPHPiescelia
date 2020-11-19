@@ -30,7 +30,7 @@ class Persona
      */
     public function getAll()
     {
-       $result = $this->db->query("SELECT * FROM personas");
+        $result = $this->db->consulta("SELECT * FROM personas");
         return $result;
     }
 

@@ -3,14 +3,14 @@ Ejercicios y prácticas resueltas de PHP para el módulo "Desarrollo web en ento
 
 Curso 2020/2021.
 
-'''Lista de ejercicios resueltos'''
+## Lista de ejercicios resueltos
 * 00: Hola mundo
 * 01: Positivo, negativo
 * 02: Tabla de multiplicar simple
 * 03: Tabla de multiplicar menos simple
 * 05: Juego del número secreto
 
-'''Práctica de la biblioteca'''
+## Práctica de la biblioteca
 Se incluye el código de varias versiones de complejidad creciente:
 * V1: Código monolítico (sin arquitectura MVC), sin seguridad, sin sesiones, sin control de acceso.
 * V2: Código monolítico (sin arquitectura MVC), con seguridad, con sesiones, con control de acceso.
